@@ -17,21 +17,30 @@ const BASE_URL = (isDormantRailway ? '' : CUSTOM_API_URL) || (isLocalhost ? 'htt
 export const hasRemoteBackend = Boolean(BASE_URL);
 
 
-async function apiCall<T>(path: string, options: RequestInit = {}): Promise<T> {
+interface ApiCallOptions extends RequestInit {
+  timeoutMs?: number;
+}
+
+async function apiCall<T>(path: string, options: ApiCallOptions = {}): Promise<T> {
   if (!BASE_URL) {
     throw new Error('No remote backend configured; using resilient client-side recruitment engine');
   }
 
+  const { timeoutMs = 30000, signal: customSignal, ...fetchOptions } = options;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 4000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  if (customSignal) {
+    customSignal.addEventListener('abort', () => controller.abort());
+  }
 
   try {
     const res = await fetch(`${BASE_URL}${path}`, {
-      ...options,
-      signal: options.signal || controller.signal,
+      ...fetchOptions,
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
-        ...options.headers,
+        ...fetchOptions.headers,
       },
     });
     clearTimeout(timeoutId);
@@ -315,9 +324,10 @@ export const analyzeGitHubRepo = async (
         method: 'POST',
         body: JSON.stringify({ repo_url: repoUrl }),
         signal,
+        timeoutMs: 120000, // 2 minutes for deep multi-agent repo analysis
       });
-    } catch {
-      // Fallback seamlessly to client-side multi-agent harness generator
+    } catch (err) {
+      console.warn('[TalentAgent] Remote repo analysis fallback engaged:', err);
     }
   }
   return generateHarnessFallback(repoUrl);
@@ -333,9 +343,10 @@ export const analyzeGitHubRepoChat = async (
       return await apiCall<GitHubChatResponse>('/api/v1/github/chat', {
         method: 'POST',
         body: JSON.stringify({ repo_url: repoUrl, question, repo_context: repoContext }),
+        timeoutMs: 60000, // 60 seconds for grounded LLM agent chat
       });
-    } catch {
-      // Fallback
+    } catch (err) {
+      console.warn('[TalentAgent] Remote chat fallback engaged:', err);
     }
   }
   return generateChatFallback(question, repoUrl);
