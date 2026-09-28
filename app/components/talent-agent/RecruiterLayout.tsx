@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useTalentAgentStore } from '~/lib/talentAgentStore';
 import { getMandates, createMandate, deleteMandate } from '~/lib/talentAgentApi';
-import { isTemplateMandate } from '~/lib/talentMandateTemplates';
+import { isTemplateMandate, TEMPLATE_MANDATES } from '~/lib/talentMandateTemplates';
 import PythonSourceModal from './PythonSourceModal';
 
 interface Props {
@@ -25,17 +25,38 @@ export default function RecruiterLayout({ children, mandateId, candidateId }: Pr
   const [newCompany, setNewCompany] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
+  // Sync activeMandateId with mandateId prop from URL immediately
+  useEffect(() => {
+    if (mandateId && mandateId !== activeMandateId) {
+      setActiveMandateId(mandateId);
+    }
+  }, [mandateId, activeMandateId]);
+
   // Load mandates on mount
   useEffect(() => {
+    // If mandates store is empty, initialize default templates immediately
+    if (!mandates || mandates.length === 0) {
+      setMandates([]);
+    }
+
     getMandates()
       .then((data) => {
-        setMandates(data);
-        if (data.length > 0 && !activeMandateId) {
-          // Only set a default if nothing is selected yet
-          setActiveMandateId(mandateId || data[0].id);
+        if (Array.isArray(data) && data.length > 0) {
+          setMandates(data);
+        }
+        if (!activeMandateId) {
+          setActiveMandateId(mandateId || 'a0000000-0000-0000-0000-000000000001');
         }
       })
-      .catch(console.error);
+      .catch((err) => {
+        console.warn('Backend unavailable, default template mandates active:', err);
+        if (!mandates || mandates.length === 0) {
+          setMandates([]);
+        }
+        if (!activeMandateId) {
+          setActiveMandateId(mandateId || 'a0000000-0000-0000-0000-000000000001');
+        }
+      });
   }, []);
 
   // Click outside to close dropdown
@@ -54,10 +75,17 @@ export default function RecruiterLayout({ children, mandateId, candidateId }: Pr
 
   // Helper to format role and company name: "Role (Company)" or "Role" if company is blank
   const formatMandateLabel = (m?: any) => {
-    if (!m) return 'Select Mandate';
-    const role = (m.job_requirements?.role || m.title || '').trim() || 'Software Engineer';
-    const company = (m.company || '').trim();
-    return company ? `${role} (${company})` : role;
+    if (m) {
+      const role = (m.job_requirements?.role || m.title || '').trim() || 'Software Engineer';
+      const company = (m.company || '').trim();
+      return company ? `${role} (${company})` : role;
+    }
+    // Direct template fallback by current ID
+    const tpl = TEMPLATE_MANDATES.find((t) => t.id === currentMandateId);
+    if (tpl) {
+      return `${tpl.role} (${tpl.company})`;
+    }
+    return 'Select Mandate';
   };
 
   const switchMandate = (selectedId: string) => {

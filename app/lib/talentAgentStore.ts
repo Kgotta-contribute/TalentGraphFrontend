@@ -55,11 +55,12 @@ export const useTalentAgentStore = create<TalentAgentStore>()(
       activeMandateId: null,
       setActiveMandateId: (id) => set({ activeMandateId: id }),
 
-      mandates: [],
+      mandates: organizeMandates([]),
       // When fresh data comes from the API, merge with any persisted overrides and organize
       setMandates: (mandates) => {
         const overrides = get().mandateOverrides;
-        const merged = mandates.map((m) =>
+        const list = Array.isArray(mandates) && mandates.length > 0 ? mandates : [];
+        const merged = list.map((m) =>
           overrides[m.id] ? mergeMandateWithOverride(m, overrides[m.id]) : m
         );
         const organized = organizeMandates(merged);
