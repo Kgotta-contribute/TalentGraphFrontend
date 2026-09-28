@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router';
 import RecruiterLayout from '~/components/talent-agent/RecruiterLayout';
 import { getMandate, getMandates, saveJobDescription, analyzeJD, createMandate, deleteMandate } from '~/lib/talentAgentApi';
 import { useTalentAgentStore } from '~/lib/talentAgentStore';
-import { isTemplateMandate, getTemplateMandateId } from '~/lib/talentMandateTemplates';
+import { isTemplateMandate, getTemplateMandateId, getTemplateKeyFromId, TEMPLATE_MANDATES } from '~/lib/talentMandateTemplates';
 
 const TEMPLATES = {
   'Tekion Senior Full-Stack': `TEKION COMPANY
@@ -406,6 +406,146 @@ const TEMPLATE_METADATA: Record<string, { role: string; company: string }> = {
   'Rippling (AI Governance)': { role: 'Software Engineer II (AI Governance)', company: 'Rippling' },
 };
 
+const TEMPLATE_TAXONOMIES: Record<string, any> = {
+  'Tekion Senior Full-Stack': {
+    role: 'Senior Full-Stack & AI Systems Engineer',
+    experience_target_years: 4,
+    education_criteria: "Bachelor's or Master's in Computer Science or related quantitative field",
+    mandatory_skills: [
+      'Python', 'FastAPI', 'LangGraph', 'LangChain', 'React',
+      'TypeScript', 'Vector Search', 'FAISS', 'Docker', 'PostgreSQL'
+    ],
+    preferred_skills: [
+      'AWS', 'Kubernetes', 'Redis', 'Celery',
+      'Sentence-Transformers', 'ChromaDB', 'CI/CD', 'Tailwind CSS'
+    ],
+    soft_skills: [
+      'Problem Solving', 'System Architecture',
+      'Cross-functional Collaboration', 'Technical Communication'
+    ],
+    responsibilities: [
+      'Architect and maintain asynchronous Python/FastAPI microservices',
+      'Build multi-agent LLM & RAG retrieval systems with LangGraph/LangChain',
+      'Develop responsive React & TypeScript interfaces',
+      'Optimize vector database indexes and semantic search retrieval',
+      'Deploy containerized services to cloud infrastructure with CI/CD'
+    ],
+    domain_tags: ['AI/ML', 'Full-Stack', 'Distributed Systems', 'Cloud', 'Vector Search']
+  },
+  'Senior Full-Stack': {
+    role: 'Senior Full-Stack & AI Systems Engineer',
+    experience_target_years: 4,
+    education_criteria: "Bachelor's or Master's in Computer Science or related quantitative field",
+    mandatory_skills: [
+      'Python', 'FastAPI', 'LangGraph', 'LangChain', 'React',
+      'TypeScript', 'Vector Search', 'FAISS', 'Docker', 'PostgreSQL'
+    ],
+    preferred_skills: [
+      'AWS', 'Kubernetes', 'Redis', 'Celery',
+      'Sentence-Transformers', 'ChromaDB', 'CI/CD', 'Tailwind CSS'
+    ],
+    soft_skills: [
+      'Problem Solving', 'System Architecture',
+      'Cross-functional Collaboration', 'Technical Communication'
+    ],
+    responsibilities: [
+      'Architect and maintain asynchronous Python/FastAPI microservices',
+      'Build multi-agent LLM & RAG retrieval systems with LangGraph/LangChain',
+      'Develop responsive React & TypeScript interfaces',
+      'Optimize vector database indexes and semantic search retrieval',
+      'Deploy containerized services to cloud infrastructure with CI/CD'
+    ],
+    domain_tags: ['AI/ML', 'Full-Stack', 'Distributed Systems', 'Cloud', 'Vector Search']
+  },
+  'Senior Cloud & DevOps': {
+    role: 'Senior Cloud Platform & DevOps Engineer',
+    experience_target_years: 5,
+    education_criteria: 'B.S. in Computer Science, Software Engineering, or equivalent operational experience',
+    mandatory_skills: [
+      'Kubernetes', 'Terraform', 'Linux', 'Helm',
+      'Docker', 'CI/CD', 'Python', 'AWS'
+    ],
+    preferred_skills: [
+      'ArgoCD', 'Prometheus', 'Grafana', 'Golang', 'GCP', 'PostgreSQL'
+    ],
+    soft_skills: [
+      'Incident Management', 'Reliability Engineering',
+      'DevOps Culture', 'Infrastructure Architecture'
+    ],
+    responsibilities: [
+      'Architect and maintain production EKS/GKE Kubernetes clusters',
+      'Automate multi-region infrastructure provisioning using Terraform',
+      'Implement GitOps pipelines with ArgoCD and automated canary releases',
+      'Monitor real-time system metrics with Prometheus and Grafana dashboards'
+    ],
+    domain_tags: ['Cloud', 'DevOps', 'Kubernetes', 'Infrastructure as Code', 'SRE']
+  },
+  'Staff Machine Learning': {
+    role: 'Staff Machine Learning Engineer',
+    experience_target_years: 7,
+    education_criteria: 'Ph.D. or M.S. in Computer Science, Artificial Intelligence, or Electrical Engineering',
+    mandatory_skills: [
+      'Python', 'PyTorch', 'Transformers', 'LLMs',
+      'LangGraph', 'DeepSpeed', 'Distributed Training', 'CUDA'
+    ],
+    preferred_skills: [
+      'TensorRT-LLM', 'C++', 'vLLM', 'Triton', 'Ray', 'Vector Search'
+    ],
+    soft_skills: [
+      'Research Leadership', 'AI Ethics & Alignment', 'Technical Mentorship'
+    ],
+    responsibilities: [
+      'Lead research and production deployment of LLM fine-tuning and agentic systems',
+      'Optimize distributed multi-node GPU clusters for high-throughput inference',
+      'Architect state-of-the-art multi-agent RAG pipelines'
+    ],
+    domain_tags: ['Machine Learning', 'LLMs', 'PyTorch', 'Distributed Training', 'AI Research']
+  },
+  'Amazon SDE II (Paragon)': {
+    role: 'Software Development Engineer II',
+    experience_target_years: 1,
+    education_criteria: "Bachelor's degree in Computer Science or equivalent",
+    mandatory_skills: [
+      'Java', 'Python', 'AWS Native Systems', 'Cloud Architecture',
+      'Distributed Systems', 'RESTful APIs', 'Software Development Lifecycle'
+    ],
+    preferred_skills: [
+      'DynamoDB', 'SQS', 'SNS', 'Lambda', 'Microservices', 'Docker'
+    ],
+    soft_skills: [
+      'Customer Obsession', 'Ownership', 'Bias for Action', 'Deliver Results'
+    ],
+    responsibilities: [
+      'Design and operate high-scale transactional distributed systems',
+      'Develop cloud-native services natively in AWS',
+      'Write clean, robust, and maintainable unit and integration tests'
+    ],
+    domain_tags: ['Distributed Systems', 'Cloud', 'AWS', 'Backend', 'E-Commerce']
+  },
+  'Rippling (AI Governance)': {
+    role: 'Software Engineer II (AI Governance)',
+    experience_target_years: 3,
+    education_criteria: "Bachelor's or Master's degree in Computer Science or equivalent",
+    mandatory_skills: [
+      'Python', 'Go', 'Django', 'React', 'AWS',
+      'AI-native Engineering', 'Security & Systems Judgment', 'API Development'
+    ],
+    preferred_skills: [
+      'Model Context Protocol (MCP)', 'Model Gateways', 'AI Infrastructure',
+      'Identity & Access Management', 'Data Protection', 'MongoDB'
+    ],
+    soft_skills: [
+      'High Agency', 'Product Ownership', 'Bias Toward Shipping', 'Collaboration'
+    ],
+    responsibilities: [
+      'Design runtime authorization and audit pipelines for LLM agents',
+      'Implement MCP access control filters and model gateway proxies',
+      'Build policy-aware budget controls for enterprise AI consumption'
+    ],
+    domain_tags: ['AI Governance', 'Security', 'MCP', 'Full-Stack', 'Identity']
+  }
+};
+
 function extractCompanyFromJdText(text: string): string {
   // Check markdown link like [Infosys](https://www.linkedin.com/company/infosys/life/)
   const m0 = text.match(/\[([A-Za-z0-9&.,\s-]{2,40})\]\(https?:\/\/(?:www\.)?linkedin\.com\/company\/[^\)]+\)/i);
@@ -498,58 +638,91 @@ export default function JobDescription() {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [isNewMandatePending, setIsNewMandatePending] = useState(false);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
-    if (currentMandateId) {
+    if (!currentMandateId) return;
+
+    if (isTemplateMandate(currentMandateId)) {
+      const tplKey = getTemplateKeyFromId(currentMandateId) || 'Tekion Senior Full-Stack';
+      const defaultText = TEMPLATES[tplKey as keyof typeof TEMPLATES] || TEMPLATES['Tekion Senior Full-Stack'];
+      const defaultTaxonomy = TEMPLATE_TAXONOMIES[tplKey] || TEMPLATE_TAXONOMIES['Tekion Senior Full-Stack'];
+      const meta = TEMPLATE_MANDATES.find((t) => t.id === currentMandateId);
+
+      // Instant pre-population from local cache so the UI never displays blank
+      setRawJd(defaultText);
+      if (defaultTaxonomy) setRequirements(defaultTaxonomy);
+      setIsNewMandatePending(false);
+      setJdValidationError(null);
+      setAnalysisError(null);
+
+      if (meta) {
+        setMandate({
+          id: meta.id,
+          title: meta.title,
+          company: meta.company,
+          raw_jd: defaultText,
+          job_requirements: defaultTaxonomy,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      }
+
+      // Re-fetch in background to sync any updates
       getMandate(currentMandateId).then((m) => {
         setMandate(m);
-        const fallback = isTemplateMandate(currentMandateId) ? TEMPLATES['Senior Full-Stack'] : '';
-        setRawJd(m.raw_jd || fallback);
+        if (m.raw_jd) setRawJd(m.raw_jd);
+        if (m.job_requirements) setRequirements(m.job_requirements);
+      }).catch((err) => {
+        console.warn('Backend mandate fetch failed, using local template data:', err);
+      });
+    } else {
+      // User custom mandate
+      getMandate(currentMandateId).then((m) => {
+        setMandate(m);
+        setRawJd(m.raw_jd || '');
         setIsNewMandatePending(false);
         if (m.job_requirements) {
           setRequirements(m.job_requirements);
-        } else {
-          // Default initial taxonomy
-          setRequirements({
-            role: m.title || 'Senior Full-Stack & AI Systems Engineer',
-            experience_target_years: 4,
-            education_criteria: "Bachelor's or Master's in Computer Science or related quantitative field",
-            mandatory_skills: [
-              'Python', 'FastAPI', 'LangGraph', 'LangChain', 'React',
-              'TypeScript', 'Vector Search', 'FAISS', 'Docker', 'PostgreSQL'
-            ],
-            preferred_skills: [
-              'AWS', 'Kubernetes', 'Redis', 'Celery',
-              'Sentence-Transformers', 'ChromaDB', 'CI/CD', 'Tailwind CSS'
-            ],
-            soft_skills: [
-              'Problem Solving', 'System Architecture',
-              'Cross-functional Collaboration', 'Technical Communication'
-            ],
-            responsibilities: [
-              'Architect and maintain asynchronous Python/FastAPI microservices',
-              'Build multi-agent LLM & RAG retrieval systems with LangGraph/LangChain',
-              'Develop responsive React & TypeScript interfaces',
-              'Optimize vector database indexes and semantic search retrieval',
-              'Deploy containerized services to cloud infrastructure with CI/CD'
-            ],
-            domain_tags: ['AI/ML', 'Full-Stack', 'Distributed Systems', 'Cloud', 'Vector Search']
-          });
         }
-      }).catch(console.error);
+      }).catch((err) => {
+        console.error('Failed to load user mandate:', err);
+      });
     }
   }, [currentMandateId]);
 
-  const navigate = useNavigate();
-
   const handleTemplateClick = (templateKey: keyof typeof TEMPLATES) => {
+    const text = TEMPLATES[templateKey];
+    const taxonomy = TEMPLATE_TAXONOMIES[templateKey];
+
+    // Immediately load text and taxonomy so there is zero latency/blankness
+    if (text) setRawJd(text);
+    if (taxonomy) setRequirements(taxonomy);
+    setJdValidationError(null);
+    setAnalysisError(null);
+    setIsNewMandatePending(false);
+
     const targetId = getTemplateMandateId(templateKey);
     if (targetId) {
+      const meta = TEMPLATE_MANDATES.find((t) => t.id === targetId);
+      if (meta) {
+        setMandate({
+          id: meta.id,
+          title: meta.title,
+          company: meta.company,
+          raw_jd: text,
+          job_requirements: taxonomy,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      }
       setActiveMandateId(targetId);
-      navigate(`/recruiter/mandates/${targetId}/job-description`);
-      return;
+      if (targetId !== currentMandateId) {
+        navigate(`/recruiter/mandates/${targetId}/job-description`);
+      }
     }
-    const text = TEMPLATES[templateKey];
-    setRawJd(text);
   };
 
   const shouldCreateNewMandate = (newText: string) => {
