@@ -70,8 +70,9 @@ export default function RecruiterLayout({ children, mandateId, candidateId }: Pr
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const currentMandateId = mandateId || activeMandateId || (mandates[0]?.id ?? 'a0000000-0000-0000-0000-000000000001');
-  const activeMandate = mandates.find((m) => m.id === currentMandateId) || mandates[0];
+  const displayMandates = mandates && mandates.length > 0 ? mandates : organizeMandates([]);
+  const currentMandateId = mandateId || activeMandateId || (displayMandates[0]?.id ?? 'a0000000-0000-0000-0000-000000000001');
+  const activeMandate = displayMandates.find((m) => m.id === currentMandateId) || displayMandates[0];
 
   // Helper to format role and company name: "Role (Company)" or "Role" if company is blank
   const formatMandateLabel = (m?: any) => {

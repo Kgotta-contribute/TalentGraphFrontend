@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { organizeMandates } from './talentMandateTemplates';
+import { organizeMandates, isTemplateMandate } from './talentMandateTemplates';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Override cache — stores in-memory edits made to mandates that haven't yet
@@ -52,7 +52,7 @@ function mergeMandateWithOverride(m: TalentMandate, override: MandateOverride): 
 export const useTalentAgentStore = create<TalentAgentStore>()(
   persist(
     (set, get) => ({
-      activeMandateId: null,
+      activeMandateId: 'a0000000-0000-0000-0000-000000000001',
       setActiveMandateId: (id) => set({ activeMandateId: id }),
 
       mandates: organizeMandates([]),
@@ -110,11 +110,25 @@ export const useTalentAgentStore = create<TalentAgentStore>()(
     }),
     {
       name: 'talent-agent-store',
-      // Only persist the selection + overrides — mandates list is re-fetched and merged
-      partialState: (state: TalentAgentStore) => ({
+      partialize: (state: TalentAgentStore) => ({
         activeMandateId: state.activeMandateId,
         mandateOverrides: state.mandateOverrides,
+        // Persist up to 5 user custom mandates in local storage
+        userMandates: state.mandates.filter((m) => !isTemplateMandate(m.id)).slice(0, 5),
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          const userM = (state as any).userMandates || [];
+          const overrides = state.mandateOverrides || {};
+          const merged = userM.map((m: TalentMandate) =>
+            overrides[m.id] ? mergeMandateWithOverride(m, overrides[m.id]) : m
+          );
+          state.mandates = organizeMandates(merged);
+          if (!state.activeMandateId && state.mandates.length > 0) {
+            state.activeMandateId = state.mandates[0].id;
+          }
+        }
+      },
     } as any
   )
 );
