@@ -8,9 +8,11 @@ const isLocalhost =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-// If the configured URL is the known suspended Railway URL or empty, disable remote network calls to prevent 502s & red network tab errors
+const DEFAULT_PROD_API_URL = 'https://talentgraphbackend-production.up.railway.app';
+
+// If the configured URL is the old suspended Railway URL, use the live talentgraphbackend URL
 const isDormantRailway = CUSTOM_API_URL?.includes('web-production-31042.up.railway.app');
-const BASE_URL = (isDormantRailway ? '' : CUSTOM_API_URL) || (isLocalhost ? 'http://localhost:8000' : '');
+const BASE_URL = (isDormantRailway ? '' : CUSTOM_API_URL) || (isLocalhost ? 'http://localhost:8000' : DEFAULT_PROD_API_URL);
 
 export const hasRemoteBackend = Boolean(BASE_URL);
 
