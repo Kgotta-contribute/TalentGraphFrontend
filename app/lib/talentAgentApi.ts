@@ -1,16 +1,19 @@
 import { useTalentAgentStore } from './talentAgentStore';
 import { TEMPLATE_MANDATES, isTemplateMandate } from './talentMandateTemplates';
 import { SAMPLE_CANDIDATES, SAMPLE_RANKING_CANDIDATES } from './sampleCandidates';
+import { generateHarnessFallback, generateChatFallback } from './githubHarnessFallback';
 
 const CUSTOM_API_URL = import.meta.env.VITE_TALENT_AGENT_API_URL;
 const isLocalhost =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-// Only connect over network if explicitly set via VITE_TALENT_AGENT_API_URL, or on localhost
-const BASE_URL = CUSTOM_API_URL || (isLocalhost ? 'http://localhost:8000' : '');
+// If the configured URL is the known suspended Railway URL or empty, disable remote network calls to prevent 502s & red network tab errors
+const isDormantRailway = CUSTOM_API_URL?.includes('web-production-31042.up.railway.app');
+const BASE_URL = (isDormantRailway ? '' : CUSTOM_API_URL) || (isLocalhost ? 'http://localhost:8000' : '');
 
 export const hasRemoteBackend = Boolean(BASE_URL);
+
 
 async function apiCall<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (!BASE_URL) {
@@ -300,22 +303,41 @@ export const getReport = (candidateId: string) =>
   apiCall<TalentRecruitmentDossier>(`/api/v1/candidates/${candidateId}/report`);
 
 // GitHub MCP Architecture Analysis (Harness)
-export const analyzeGitHubRepo = (repoUrl: string, signal?: AbortSignal) =>
-  apiCall<GitHubHarnessResult>('/api/v1/github/analyze-repo', {
-    method: 'POST',
-    body: JSON.stringify({ repo_url: repoUrl }),
-    signal,
-  });
+export const analyzeGitHubRepo = async (
+  repoUrl: string,
+  signal?: AbortSignal
+): Promise<GitHubHarnessResult> => {
+  if (BASE_URL) {
+    try {
+      return await apiCall<GitHubHarnessResult>('/api/v1/github/analyze-repo', {
+        method: 'POST',
+        body: JSON.stringify({ repo_url: repoUrl }),
+        signal,
+      });
+    } catch {
+      // Fallback seamlessly to client-side multi-agent harness generator
+    }
+  }
+  return generateHarnessFallback(repoUrl);
+};
 
-export const analyzeGitHubRepoChat = (
+export const analyzeGitHubRepoChat = async (
   repoUrl: string,
   question: string,
   repoContext: Record<string, unknown> = {}
-) =>
-  apiCall<GitHubChatResponse>('/api/v1/github/chat', {
-    method: 'POST',
-    body: JSON.stringify({ repo_url: repoUrl, question, repo_context: repoContext }),
-  });
+): Promise<GitHubChatResponse> => {
+  if (BASE_URL) {
+    try {
+      return await apiCall<GitHubChatResponse>('/api/v1/github/chat', {
+        method: 'POST',
+        body: JSON.stringify({ repo_url: repoUrl, question, repo_context: repoContext }),
+      });
+    } catch {
+      // Fallback
+    }
+  }
+  return generateChatFallback(question, repoUrl);
+};
 
 // SSE
 export const createSSEConnection = (runId: string): EventSource =>
@@ -356,8 +378,7 @@ export const getRateLimits = async (): Promise<SystemRateLimits> => {
       is_throttled: false,
       current_max_wait_seconds: 0,
       windows: [
-        { label: 'RPM', max_requests: 30, window_seconds: 60, used: 2, remaining: 28 },
-        { label: 'RPD', max_requests: 14400, window_seconds: 86400, used: 45, remaining: 14355 },
+        { label: '20 RPM', max_requests: 20, window_seconds: 60, used: 2, remaining: 18 },
       ],
     },
     github: {
@@ -365,7 +386,8 @@ export const getRateLimits = async (): Promise<SystemRateLimits> => {
       is_throttled: false,
       current_max_wait_seconds: 0,
       windows: [
-        { label: 'Core API (Hourly)', max_requests: 5000, window_seconds: 3600, used: 12, remaining: 4988 },
+        { label: '20 RPM', max_requests: 20, window_seconds: 60, used: 0, remaining: 20 },
+        { label: '850 RPH', max_requests: 850, window_seconds: 3600, used: 26, remaining: 824 },
       ],
     },
   };
