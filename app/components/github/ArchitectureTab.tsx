@@ -8,128 +8,6 @@ export function generateAsciiArchitecture(
     return architecture.ascii_architecture_diagram;
   }
 
-  const name = (repoInfo?.full_name || repoInfo?.name || '').toLowerCase();
-
-  if (name.includes('talentgraphfrontend') || name.includes('frontend')) {
-    return `+-------------------------------------------------------------+
-|                     TalentGraph Frontend                    |
-|                   React 19 + React Router v7                |
-+-------------------------------------------------------------+
-                |                             |
-         [Candidate Mode]              [Recruiter Mode]
-                |                             |
-                v                             v
-         Puter.js Storage             TalentGraph REST API
-       (KV Store / FS / Auth)         (FastAPI + LangGraph)
-                |                             |
-                v                             v
-       Candidate ATS Audits          Supabase PostgreSQL
-                                          + pgvector
-                                              |
-                                              v
-                                     Hugging Face BGE-M3
-                                     + GitHub MCP Client`;
-  }
-
-  if (name.includes('talentgraphbackend') || name.includes('backend')) {
-    return `[ Job Description ] ───► Agent 1 (JD Analyzer) ──┐
-                                                 │
-                                                 ▼
-[ Candidate Resume ] ──► Agent 2 (Profile Parser) ──► Agent 3 (Requirement Verifier)
-                                                      │ (pgvector RAG + BGE-M3)
-[ GitHub Profile ] ────► Agent 6 (GitHub MCP Engine) ─┴─┐
-                                                        │
-                                                        ▼
-                                          Agent 4 (Deterministic Scoring)
-                                            [ NO LLM • Pure Mathematical Logic ]
-                                                        │
-                                                        ▼
-                                          Agent 5 (Executive Dossier Agent)
-                                                        │
-                                                        ▼
-                                          [ Structured Interview Report & Rankings ]`;
-  }
-
-  if (name.includes('debate')) {
-    return `┌────────────────────────────────────────────────────────┐
-│                   PRESENTATION LAYER                   │
-│         (Streamlit Web App, FastAPI Server)            │
-└────────────────────────────────────────────────────────┘
-                            │ (Invokes)
-                            ▼
-┌────────────────────────────────────────────────────────┐
-│                  APPLICATION WORKFLOW                  │
-│               (DebateWorkflow, DebateGraph)            │
-└────────────────────────────────────────────────────────┘
-                            │ (Uses)
-                            ▼
-┌────────────────────────────────────────────────────────┐
-│                         PORTS                          │
-│                       (LLMPort)                        │
-└────────────────────────────────────────────────────────┘
-                            ▲ (Implements / Plugs into)
-                            │
-┌────────────────────────────────────────────────────────┐
-│                        ADAPTERS                        │
-│                (Ollama, Groq Adapters)                 │
-└────────────────────────────────────────────────────────┘
-                            │ (Uses)
-                            ▼
-┌────────────────────────────────────────────────────────┐
-│                      CORE DOMAIN                       │
-│        (Agents, models.py, prompts, utils)             │
-└────────────────────────────────────────────────────────┘`;
-  }
-
-  if (name.includes('resume')) {
-    return `┌───────────────────────┐   HTTP GET/POST   ┌───────────────────────────────────────┐
-│   Browser Client      │ ─────────────────► │   Node.js Server (React Router SSR)   │
-│ (React Router SPA)    │                    │   @react-router/node, @react-router/serve│
-└───────────────────────┘                    └─────────────────────┬─────────────────┘
-                                                          │
-                                                          ▼
-                                            ┌─────────────────────────────┐
-                                            │   Route Handlers (app/routes)│
-                                            │   – home, upload, resume, … │
-                                            └───────────────┬─────────────┘
-                                                            │
-                                                            ▼
-                                            ┌─────────────────────────────┐
-                                            │   UI Components               │
-                                            │   – FileUploader, ResumeCard, │
-                                            │   – ScoreGauge, Navbar …      │
-                                            └───────────────┬─────────────┘
-                                                            │
-                                                            ▼
-                                            ┌─────────────────────────────┐
-                                            │   Global State Store (Zustand)│
-                                            │   – resume metadata, images, │
-                                            │   – feedback scores           │
-                                            └───────────────┬─────────────┘
-                                                            │
-                                                            ▼
-                                            ┌─────────────────────────────┐
-                                            │   PDF → Image Service         │
-                                            │   (pdfjs‑dist lazy load)      │
-                                            └───────────────┬─────────────┘
-                                                            │
-                                                            ▼
-                                            ┌─────────────────────────────┐
-                                            │   Local Disk / Puter Wrapper  │
-                                            │   – fs.write, fs.read, delete │
-                                            └───────────────┬─────────────┘
-                                                            │
-                                                            ▼
-                                            ┌─────────────────────────────┐
-                                            │   Rendered HTML / JSON Response│
-                                            └─────────────────────────────┘
-
-┌───────────────────────┐
-│   Docker Container    │
-│   (multi‑stage build) │
-└───────────────────────┘`;
-  }
-
   const stack = architecture.tech_stack || {
     frontend: [],
     backend: [],
@@ -140,10 +18,10 @@ export function generateAsciiArchitecture(
   };
 
   const fe = (stack.frontend || [])[0] || 'Client SPA';
-  const be = (stack.backend || [])[0] || 'FastAPI Gateway';
-  const db = (stack.database_and_storage || [])[0] || 'PostgreSQL';
-  const ai = (stack.ai_and_data || [])[0] || 'AI Orchestrator';
-  const storage = (stack.database_and_storage || [])[1] || 'Vector Store / Storage';
+  const be = (stack.backend || [])[0] || 'API Gateway';
+  const db = (stack.database_and_storage || [])[0] || 'Database Storage';
+  const ai = (stack.ai_and_data || [])[0] || 'AI / Worker Logic';
+  const storage = (stack.database_and_storage || [])[1] || 'Persistence Layer';
 
   return `┌────────────────────────────────────────────────────────┐
 │                   User / Web Browser                   │
