@@ -17,30 +17,109 @@ export function generateAsciiArchitecture(
     testing_and_tooling: [],
   };
 
-  const fe = (stack.frontend || [])[0] || 'Client SPA';
-  const be = (stack.backend || [])[0] || 'API Gateway';
-  const db = (stack.database_and_storage || [])[0] || 'Database Storage';
-  const ai = (stack.ai_and_data || [])[0] || 'AI / Worker Logic';
-  const storage = (stack.database_and_storage || [])[1] || 'Persistence Layer';
+  const frontendTech: string[] = stack.frontend || [];
+  const backendTech: string[] = stack.backend || [];
+  const dbTech: string[] = stack.database_and_storage || [];
+  const aiTech: string[] = stack.ai_and_data || [];
 
-  return `┌────────────────────────────────────────────────────────┐
+  const repoName = (repoInfo?.name || '').toLowerCase();
+  const isMultiAgent = aiTech.some(t => t.toLowerCase().includes('langgraph') || t.toLowerCase().includes('multi-agent'))
+    || repoName.includes('multi_agent') || repoName.includes('debate');
+  const isFrontend = (frontendTech.length > 0 && backendTech.length === 0)
+    || repoName.includes('frontend');
+
+  if (isFrontend) {
+    const fe = frontendTech[0] || 'React / Vite SPA';
+    const stateMgr = frontendTech.find(t => t.includes('Zustand')) ? 'Zustand Store'
+      : frontendTech.find(t => t.includes('Redux')) ? 'Redux Store' : 'Local State Management';
+    const router = frontendTech.find(t => t.includes('Router')) ? 'React Router' : 'Client Router';
+    const styling = frontendTech.find(t => t.includes('Tailwind')) ? 'Tailwind CSS' : 'Component Styling';
+    const apiLayer = 'API Client & Event Ingress';
+    const targetBackend = backendTech[0] ? `${backendTech[0]} API Gateway` : 'Backend REST & SSE API';
+    return `┌────────────────────────────────────────────────────────┐
 │                   User / Web Browser                   │
 └────────────────────────────────────────────────────────┘
                             │
                             ▼
 ┌────────────────────────────────────────────────────────┐
-│         ${fe.padEnd(46, ' ')} │
+│         ${fe.padEnd(46, ' ')}│
+│         Styling: ${styling.padEnd(36, ' ')}│
+└────────────────────────────────────────────────────────┘
+            │                               │
+            ▼                               ▼
+┌──────────────────────┐        ┌──────────────────────┐
+│  State Management    │        │  Client Navigation   │
+│  ${stateMgr.padEnd(20, ' ')}│        │  ${router.padEnd(20, ' ')}│
+└──────────────────────┘        └──────────────────────┘
+            │                               │
+            └───────────────┬───────────────┘
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│         ${apiLayer.padEnd(46, ' ')}│
+│         (REST Client & SSE Event Stream Ingress)       │
 └────────────────────────────────────────────────────────┘
                             │
                             ▼
 ┌────────────────────────────────────────────────────────┐
-│         ${be.padEnd(46, ' ')} │
+│         ${targetBackend.padEnd(46, ' ')}│
+└────────────────────────────────────────────────────────┘`;
+  }
+
+  if (isMultiAgent) {
+    const agents = architecture.core_components
+      ?.filter(c => c.name.toLowerCase().includes('agent') || c.name.toLowerCase().includes('worker'))
+      .map(c => c.name) || [];
+    const a1 = agents[0] || 'Domain Agent 1';
+    const a2 = agents[1] || 'Domain Agent 2';
+    const a3 = agents[2] || 'Synthesis / Arbiter';
+    const coordinator = aiTech.find(t => t.includes('LangGraph')) ? 'LangGraph StateGraph Router' : 'Workflow Coordinator / Router';
+    const db = dbTech[0] || 'Database Storage';
+    const llm = aiTech[0] || 'LLM Inference';
+    return `[ User Ingress ] ───► [ ${coordinator} ] ──┐
+                                                           │
+                                                           ▼
+                      ┌───────────────────┬───────────────────┐
+                      ▼                   ▼                   ▼
+            ┌───────────────────┐┌───────────────────┐┌───────────────────┐
+            │${a1.substring(0,19).padEnd(19, ' ')}││${a2.substring(0,19).padEnd(19, ' ')}││${a3.substring(0,19).padEnd(19, ' ')}│
+            └───────────────────┘└───────────────────┘└───────────────────┘
+                      │                   │                   │
+                      └───────────────────┼───────────────────┘
+                                          ▼
+                      ┌───────────────────────────────────────┐
+                      │    Synthesis, Scoring & Arbiter DTO   │
+                      └───────────────────────────────────────┘
+                                          │
+                                          ▼
+                      ┌───────────────────────────────────────┐
+                      │ Persistence: ${db} · ${llm} │
+                      └───────────────────────────────────────┘`;
+  }
+
+  // General backend / API architecture
+  const srv = backendTech[0] || 'Application Core';
+  const db = dbTech[0] || 'Data Persistence';
+  const ai = aiTech[0] || 'Service Workers';
+  return `┌────────────────────────────────────────────────────────┐
+│               Client Ingress / User Ingress            │
 └────────────────────────────────────────────────────────┘
-            │               │               │
-            ▼               ▼               ▼
-┌─────────────────┬─────────────────┬─────────────────┐
-│${ai.padEnd(17, ' ')}│${db.padEnd(17, ' ')}│${storage.padEnd(17, ' ')}│
-└─────────────────┴─────────────────┴─────────────────┘`;
+                            │
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│          API Routing Layer (${srv.substring(0,24).padEnd(24, ' ')})          │
+└────────────────────────────────────────────────────────┘
+            │                               │
+            ▼                               ▼
+┌──────────────────────┐        ┌──────────────────────┐
+│  Business Services   │        │  Domain Orchestrator │
+│  ${srv.substring(0,20).padEnd(20, ' ')}│        │  ${ai.substring(0,20).padEnd(20, ' ')}│
+└──────────────────────┘        └──────────────────────┘
+            │                               │
+            └───────────────┬───────────────┘
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│          Data Persistence & Storage (${db.substring(0,16).padEnd(16, ' ')})       │
+└────────────────────────────────────────────────────────┘`;
 }
 
 interface ArchitectureTabProps {
