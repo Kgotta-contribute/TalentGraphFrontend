@@ -1,7 +1,7 @@
 import { useTalentAgentStore } from './talentAgentStore';
 import { TEMPLATE_MANDATES, isTemplateMandate } from './talentMandateTemplates';
 import { SAMPLE_CANDIDATES, SAMPLE_RANKING_CANDIDATES } from './sampleCandidates';
-import { generateHarnessFallback, generateChatFallback } from './githubHarnessFallback';
+import { fetchPublicRepoFallback, generateHarnessFallback, generateChatFallback } from './githubHarnessFallback';
 
 const CUSTOM_API_URL = import.meta.env.VITE_TALENT_AGENT_API_URL;
 const isLocalhost =
@@ -324,13 +324,13 @@ export const analyzeGitHubRepo = async (
         method: 'POST',
         body: JSON.stringify({ repo_url: repoUrl }),
         signal,
-        timeoutMs: 120000, // 2 minutes for deep multi-agent repo analysis
+        timeoutMs: 45000,
       });
     } catch (err) {
       console.warn('[TalentAgent] Remote repo analysis fallback engaged:', err);
     }
   }
-  return generateHarnessFallback(repoUrl);
+  return fetchPublicRepoFallback(repoUrl);
 };
 
 export const analyzeGitHubRepoChat = async (
@@ -343,13 +343,13 @@ export const analyzeGitHubRepoChat = async (
       return await apiCall<GitHubChatResponse>('/api/v1/github/chat', {
         method: 'POST',
         body: JSON.stringify({ repo_url: repoUrl, question, repo_context: repoContext }),
-        timeoutMs: 60000, // 60 seconds for grounded LLM agent chat
+        timeoutMs: 30000,
       });
     } catch (err) {
       console.warn('[TalentAgent] Remote chat fallback engaged:', err);
     }
   }
-  return generateChatFallback(question, repoUrl);
+  return generateChatFallback(question, repoUrl, repoContext);
 };
 
 // SSE
