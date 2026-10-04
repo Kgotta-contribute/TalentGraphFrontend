@@ -50,7 +50,7 @@ export default function ObservabilityPanel({ observability }: ObservabilityPanel
             <span className="text-indigo-400 font-bold">{observability.files_analyzed} files analyzed</span>
             <span className="text-indigo-400 font-bold">{observability.execution_time_seconds}s execution</span>
             <span className="text-emerald-400 font-medium">
-              🛡️ Rate Limit Protected (Groq 20 RPM · GitHub 20 RPM &amp; 850 RPH)
+              🛡️ Rate Limit Protected (Groq 20 RPM · GitHub 120 RPM &amp; 4,000 RPH)
             </span>
           </div>
         </div>

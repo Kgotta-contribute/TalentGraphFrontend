@@ -399,8 +399,8 @@ export const getRateLimits = async (): Promise<SystemRateLimits> => {
       is_throttled: false,
       current_max_wait_seconds: 0,
       windows: [
-        { label: '20 RPM', max_requests: 20, window_seconds: 60, used: 0, remaining: 20 },
-        { label: '850 RPH', max_requests: 850, window_seconds: 3600, used: 26, remaining: 824 },
+        { label: '120 RPM', max_requests: 120, window_seconds: 60, used: 0, remaining: 120 },
+        { label: '4000 RPH', max_requests: 4000, window_seconds: 3600, used: 26, remaining: 3974 },
       ],
     },
   };
