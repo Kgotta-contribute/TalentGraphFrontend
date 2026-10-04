@@ -21,24 +21,26 @@ export function generateAsciiArchitecture(
   const be = (stack.backend || [])[0] || 'FastAPI / API Engine';
   const db = (stack.database_and_storage || [])[0] || 'PostgreSQL';
   const ai = (stack.ai_and_data || [])[0] || 'LangGraph / RAG';
-  const storage = (stack.database_and_storage || [])[1] || 'Vector Store / S3';
+  const storage = (stack.database_and_storage || [])[1] || 'Vector Store / Storage';
 
-  return `                              User / Client
-                                    │
-                                    ▼
-                         ${fe.padEnd(24, ' ')}
-                                    │
-                                    ▼
-                         ${be.padEnd(24, ' ')}
-                                    │
-                   ┌────────────────┼────────────────┐
-                   ▼                ▼                ▼
-            ${ai.padEnd(16, ' ')} ${db.padEnd(16, ' ')} ${storage.padEnd(16, ' ')}
-                   │
-           ┌───────┼───────┐
-           ▼       ▼       ▼
-        Ingress   Core   Storage
-        Service  Workers  Pipeline`;
+  return `┌────────────────────────────────────────────────────────┐
+│                   User / Web Browser                   │
+└────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│         ${fe.padEnd(46, ' ')} │
+└────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│         ${be.padEnd(46, ' ')} │
+└────────────────────────────────────────────────────────┘
+            │               │               │
+            ▼               ▼               ▼
+┌─────────────────┬─────────────────┬─────────────────┐
+│${ai.padEnd(17, ' ')}│${db.padEnd(17, ' ')}│${storage.padEnd(17, ' ')}│
+└─────────────────┴─────────────────┴─────────────────┘`;
 }
 
 interface ArchitectureTabProps {
