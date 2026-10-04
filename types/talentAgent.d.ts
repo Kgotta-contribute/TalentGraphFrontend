@@ -237,6 +237,71 @@ interface GitHubDesignPattern {
   rationale: string;
 }
 
+interface GitHubArchitectureComponent {
+  name: string;
+  tech: string;
+  path: string;
+  metrics?: string;
+  responsibility: string;
+  evidence?: string;
+  line_number?: number;
+  confidence?: number;
+}
+
+interface GitHubArchitectureZone {
+  name: string;
+  badge: string;
+  icon: string;
+  description: string;
+  components: GitHubArchitectureComponent[];
+}
+
+interface GitHubRequestLifecycleStep {
+  step: number;
+  layer: string;
+  component: string;
+  action: string;
+  file_path: string;
+  code_snippet?: string;
+  output?: string;
+}
+
+interface GitHubDataFlowStage {
+  stage: number;
+  name: string;
+  input: string;
+  transformation: string;
+  output: string;
+  component: string;
+  file_path: string;
+}
+
+interface GitHubAgentPipelineNode {
+  name: string;
+  role: string;
+  file_path: string;
+  inputs?: string[];
+  outputs?: string[];
+  tools_or_models?: string[];
+}
+
+interface GitHubAgentPipeline {
+  framework: string;
+  orchestration: string;
+  nodes: GitHubAgentPipelineNode[];
+  conditional_edges?: { from: string; to: string; condition: string }[];
+}
+
+interface GitHubComplexityMetrics {
+  components_count: number;
+  endpoints_count: number;
+  data_stores_count: number;
+  ai_components_count: number;
+  complexity_rating: number;
+  modularity_rating: number;
+  coupling_rating: number;
+}
+
 interface GitHubArchitectureAnalysis {
   architecture_style: string;
   system_summary: string;
@@ -249,6 +314,11 @@ interface GitHubArchitectureAnalysis {
     testing_and_tooling: string[];
   };
   core_components: GitHubComponentItem[];
+  zones?: GitHubArchitectureZone[];
+  request_lifecycle?: GitHubRequestLifecycleStep[];
+  data_flow_stages?: GitHubDataFlowStage[];
+  agent_pipeline?: GitHubAgentPipeline;
+  complexity_metrics?: GitHubComplexityMetrics;
   design_patterns: GitHubDesignPattern[];
   data_flow_explanation: string;
   engineering_strengths: string[];
